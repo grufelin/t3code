@@ -73,7 +73,7 @@ jobs:
               "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_id}/disable"
           done < <(
             gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/workflows" \
-              --jq '.workflows[] | [.id, .path] | @tsv'
+              --jq '.workflows[] | select(.state == "active") | [.id, .path] | @tsv'
           )
 
   build:
