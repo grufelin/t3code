@@ -103,7 +103,8 @@ jobs:
         run: vp install --filter=@t3tools/desktop... --filter=t3... --filter=@t3tools/scripts...
 
       - name: Test the font fix
-        run: vp test run --passWithNoTests --project unit apps/web/src/appearanceFonts.test.ts
+        working-directory: apps/web
+        run: vp test run --passWithNoTests --project unit src/appearanceFonts.test.ts
 
       - name: Install Linux build libraries
         run: |
