@@ -1,11 +1,6 @@
 name: Fork Linux x64
 
 on:
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: "17 2 */4 * *"
   workflow_dispatch:
 
 concurrency:
@@ -24,7 +19,6 @@ jobs:
       actions: write
       contents: write
     outputs:
-      changed: ${{ steps.sync.outputs.changed }}
       sha: ${{ steps.sync.outputs.sha }}
     steps:
       - name: Checkout fork
@@ -56,9 +50,6 @@ jobs:
           after="$(git rev-parse HEAD)"
           if [[ "$after" != "$before" ]]; then
             git push origin HEAD:main
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
           echo "sha=$after" >> "$GITHUB_OUTPUT"
 
@@ -81,7 +72,6 @@ jobs:
           )
 
       - name: Remove the previous fork build artifact
-        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -98,7 +88,6 @@ jobs:
   build:
     name: Build AppImage and portable tarball
     needs: sync
-    if: github.event_name != 'schedule' || needs.sync.outputs.changed == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
