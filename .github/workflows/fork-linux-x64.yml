@@ -44,8 +44,23 @@ jobs:
             main \
             +refs/pull/7494/head:refs/remotes/upstream/pr-7494
 
-          git merge --no-edit --no-ff upstream/main
-          git merge --no-edit --no-ff upstream/pr-7494
+          merge_ref() {
+            local ref="$1"
+            git merge --no-edit --no-ff --no-commit "$ref"
+
+            local merge_head
+            merge_head="$(git rev-parse --git-path MERGE_HEAD)"
+            if [[ -f "$merge_head" ]]; then
+              # GITHUB_TOKEN cannot push commits that update workflow files.
+              # Keep the fork-owned workflow versions while taking all other
+              # changes from upstream and the PR.
+              git restore --source="$before" --staged --worktree -- .github/workflows
+              git commit --no-edit --allow-empty
+            fi
+          }
+
+          merge_ref upstream/main
+          merge_ref upstream/pr-7494
 
           after="$(git rev-parse HEAD)"
           if [[ "$after" != "$before" ]]; then
