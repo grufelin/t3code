@@ -46,7 +46,21 @@ jobs:
 
           merge_ref() {
             local ref="$1"
-            git merge --no-edit --no-ff --no-commit "$ref"
+            local merge_status=0
+            git merge --no-edit --no-ff --no-commit "$ref" || merge_status=$?
+
+            if (( merge_status != 0 )); then
+              mapfile -t conflicts < <(git diff --name-only --diff-filter=U)
+              if (( ${#conflicts[@]} == 0 )); then
+                return "$merge_status"
+              fi
+              for conflict in "${conflicts[@]}"; do
+                if [[ "$conflict" != .github/workflows/* ]]; then
+                  echo "merge conflict outside .github/workflows: $conflict" >&2
+                  return 1
+                fi
+              done
+            fi
 
             local merge_head
             merge_head="$(git rev-parse --git-path MERGE_HEAD)"
